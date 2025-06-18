@@ -11,8 +11,6 @@ const { ConnectDB } = require('./data/config');
 const app = express();
 const server = http.createServer(app);
 
-
-ConnectDB();
 // Configuración de WebSocket
 const io = new Server(server, {
   cors: {
@@ -34,8 +32,16 @@ io.on('connection', (socket) => {
 });
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
+  credentials: true
+}));
 app.use(express.json());
+
+// Health check para Railway
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', service: 'API-4-Turnos' });
+});
 
 // Inyectar io en las rutas
 app.use((req, res, next) => {
@@ -46,13 +52,11 @@ app.use((req, res, next) => {
 // Rutas
 app.use('/api-4-turnos', turnoRoutes);
 
-// Conexión a MongoDB
-mongoose.connect(process.env.URL)
-  .then(() => {
-    console.log('Conectado a MongoDB');
-    const PORT = process.env.PORT || 3010;
-    server.listen(PORT, () => {
-      console.log(`Servidor de turnos en http://192.168.103.85:${PORT}`);
-    });
-  })
-  .catch(err => console.error('Error MongoDB:', err));
+// Conectar a MongoDB
+ConnectDB();
+
+// Puerto dinámico para Railway
+const PORT = process.env.PORT || 3009;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor de turnos ejecutándose en puerto ${PORT}`);
+});
