@@ -3,6 +3,11 @@ const router = express.Router();
 const controller = require("../controller/turnoController");
 const { apiAuth } = require("../middleware/authMiddleware");
 
+// Health check específico del módulo
+router.get("/health", (req, res) => {
+  res.json({ status: "OK", module: "turnos" });
+});
+
 // Todas las rutas requieren autenticación
 router.use(apiAuth);
 
